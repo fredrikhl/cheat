@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/venv/simple/bin/python
 
 """cheat
 
@@ -31,9 +31,25 @@ Options:
 """
 
 # require the dependencies
-from cheat import *
-from cheat.utils import *
+import os
+from cheat import sheet, sheets
 from docopt import docopt
+
+
+def md_colorize(sheet_content):
+    u""" Colorize using markdown syntax. """
+    if not os.environ.get('CHEATCOLORS', 0):
+        return sheet_content
+
+    try:
+        from pygments import highlight
+        from pygments.formatters import TerminalFormatter
+        from pygments_markdown_lexer.lexer import MarkdownLexer
+    except ImportError:
+        from cheat.utils import colorize
+        return colorize(sheet_content)
+
+    return highlight(sheet_content, MarkdownLexer(), TerminalFormatter())
 
 
 if __name__ == '__main__':
@@ -54,8 +70,8 @@ if __name__ == '__main__':
 
     # search among the cheatsheets
     elif options['--search']:
-        print(colorize(sheets.search(options['<keyword>'])))
+        print(md_colorize(sheets.search(options['<keyword>'])))
 
     # print the cheatsheet
     else:
-        print(colorize(sheet.read(options['<cheatsheet>'])))
+        print(md_colorize(sheet.read(options['<cheatsheet>'])))

@@ -24,5 +24,6 @@ setup(
     install_requires = [
         'docopt >= 0.6.1',
         'pygments >= 1.6.0',
+        'pygments-markdown-lexer == 0.1.0.dev39',
     ]
 )
