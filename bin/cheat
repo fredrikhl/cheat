@@ -31,25 +31,9 @@ Options:
 """
 
 # require the dependencies
-import os
 from cheat import sheet, sheets
 from docopt import docopt
-
-
-def md_colorize(sheet_content):
-    u""" Colorize using markdown syntax. """
-    if not os.environ.get('CHEATCOLORS', 0):
-        return sheet_content
-
-    try:
-        from pygments import highlight
-        from pygments.formatters import TerminalFormatter
-        from pygments_markdown_lexer.lexer import MarkdownLexer
-    except ImportError:
-        from cheat.utils import colorize
-        return colorize(sheet_content)
-
-    return highlight(sheet_content, MarkdownLexer(), TerminalFormatter())
+from cheat.utils import colorize
 
 
 if __name__ == '__main__':
@@ -70,8 +54,9 @@ if __name__ == '__main__':
 
     # search among the cheatsheets
     elif options['--search']:
-        print(md_colorize(sheets.search(options['<keyword>'])))
+        print(colorize(sheets.search(options['<keyword>'])))
 
     # print the cheatsheet
     else:
-        print(md_colorize(sheet.read(options['<cheatsheet>'])))
+        print(colorize(sheet.read(options['<cheatsheet>']),
+                       options['<cheatsheet>']))

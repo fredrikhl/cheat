@@ -1,25 +1,65 @@
 from __future__ import print_function
 import os
 import sys
+import re
+
+default_lexer_name = 'markdown'
 
 
-def colorize(sheet_content):
-    """ Colorizes cheatsheet content if so configured """
+def _get_highlighter(filename, lexer_name):
+    u""" Get highlighter.
 
-    # only colorize if so configured
-    if not 'CHEATCOLORS' in os.environ:
-        return sheet_content
+    Creates a highlighter for, if available. The highlighter will use the first
+    available lexer from:
+      1. filename
+      2. lexer_name
+      3. default_lexer_name
 
+    :param string filename: A filename to fetch highlighter for.
+    :param string name: A fallback lexer name to use for highlighting.
+
+    :return callable:
+        A function that takes one parameter, the string to highlight.
+
+    """
+    # A function that just returns the text unmodified, if we're unable to do
+    # highlighting:
+    no_highlight = lambda text: text
+
+    # Import the highlight tools
     try:
         from pygments import highlight
-        from pygments.lexers import BashLexer
         from pygments.formatters import TerminalFormatter
-
-    # if pygments can't load, just return the uncolorized text
+        from pygments.lexers import get_lexer_for_filename, get_lexer_by_name
     except ImportError:
+        return no_highlight
+
+    # Find available lexer object
+    for method, value in ((get_lexer_for_filename, str(filename)),
+                          (get_lexer_by_name, str(lexer_name)),
+                          (get_lexer_by_name, default_lexer_name)):
+        try:
+            lexer = method(value)
+            break
+        except:
+            # probably pygments.util.ClassNotFound
+            continue
+
+    if lexer is None:
+        return no_highlight
+
+    return lambda text: highlight(text, lexer, TerminalFormatter())
+
+
+def colorize(sheet_content, filename=''):
+    """ Colorizes cheatsheet content if so configured """
+    do_colorize = os.environ.get('CHEATCOLORS', False)
+
+    if not do_colorize:
         return sheet_content
 
-    return highlight(sheet_content, BashLexer(), TerminalFormatter())
+    highlight = _get_highlighter(filename, do_colorize)
+    return highlight(sheet_content)
 
 
 def die(message):
@@ -51,7 +91,7 @@ def prompt_yes_or_no(question):
     # Support Python 2 and 3 input
     # Default to Python 2's input()
     get_input = raw_input
- 
+
     # If this is Python 3, use input()
     if sys.version_info[:2] >= (3, 0):
         get_input = input
