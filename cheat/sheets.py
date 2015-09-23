@@ -1,31 +1,33 @@
-from cheat import cheatsheets
 from cheat.utils import *
 import os
+import sys
+
 
 def default_path():
-    """ Returns the default cheatsheet path """
+    """ Get the location of the default cheat sheets. """
+    for p in (os.environ.get('DEFAULT_CHEAT_DIR', ''),
+              os.path.join(sys.prefix, 'share', 'cheatsheets')):
+        if os.path.isdir(p):
+            return [p, ]
+    return list()
 
-    # determine the default cheatsheet dir
-    default_sheets_dir = os.environ.get('DEFAULT_CHEAT_DIR') or os.path.join(os.path.expanduser('~'), '.cheat')
 
-    # create the DEFAULT_CHEAT_DIR if it does not exist
-    if not os.path.isdir(default_sheets_dir):
-        try:
-            # @kludge: unclear on why this is necessary
-            os.umask(0000)
-            os.mkdir(default_sheets_dir)
+def user_path():
+    """ Get the location of the users cheat sheets. """
+    for p in (os.path.join(os.path.expanduser('~'), '.cheat'), ):
+        if os.path.isdir(p):
+            return [p, ]
+    return list()
 
-        except OSError:
-            die('Could not create DEFAULT_CHEAT_DIR')
 
-    # assert that the DEFAULT_CHEAT_DIR is readable and writable
-    if not os.access(default_sheets_dir, os.R_OK):
-        die('The DEFAULT_CHEAT_DIR (' + default_sheets_dir +') is not readable.')
-    if not os.access(default_sheets_dir, os.W_OK):
-        die('The DEFAULT_CHEAT_DIR (' + default_sheets_dir +') is not writeable.')
-
-    # return the default dir
-    return default_sheets_dir
+def cheat_paths():
+    """ Get locations of additional cheat sheets. """
+    # merge the CHEATPATH paths into the sheet_paths
+    paths = []
+    for p in os.environ.get('CHEATPATH', '').split(os.pathsep):
+        if os.path.isdir(p):
+            paths.append(p)
+    return paths
 
 
 def get():
@@ -48,16 +50,10 @@ def get():
 
 def paths():
     """ Assembles a list of directories containing cheatsheets """
-    sheet_paths = [
-        default_path(),
-        cheatsheets.sheets_dir()[0],
-    ]
-
-    # merge the CHEATPATH paths into the sheet_paths
-    if 'CHEATPATH' in os.environ and os.environ['CHEATPATH']:
-        for path in os.environ['CHEATPATH'].split(os.pathsep):
-            if os.path.isdir(path):
-                sheet_paths.append(path)
+    sheet_paths = []
+    sheet_paths.extend(default_path())
+    sheet_paths.extend(user_path())
+    sheet_paths.extend(cheat_paths())
 
     if not sheet_paths:
         die('The DEFAULT_CHEAT_DIR dir does not exist or the CHEATPATH is not set.')
