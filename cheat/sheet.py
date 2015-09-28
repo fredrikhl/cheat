@@ -1,6 +1,7 @@
-from cheat import sheets 
-from cheat import utils
-from cheat.utils import *
+# encoding: utf-8
+""" Module for creating, editing and reading cheat sheets. """
+from cheat import sheets
+from cheat.utils import die, editor
 import os
 import shutil
 import subprocess
@@ -16,7 +17,7 @@ def copy(current_sheet_path, new_sheet_path):
     # fail gracefully if the cheatsheet cannot be copied. This can happen if
     # DEFAULT_CHEAT_DIR does not exist
     except IOError:
-        die ('Could not copy cheatsheet for editing.')
+        die('Could not copy cheatsheet for editing.')
 
 
 def create_or_edit(sheet):

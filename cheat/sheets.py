@@ -1,4 +1,6 @@
-from cheat.utils import *
+# encoding: utf-8
+""" Module for looking up and fetching cheat sheets. """
+from cheat.utils import die
 import os
 import sys
 
@@ -7,7 +9,7 @@ def default_path():
     """ Get the location of the default cheat sheets. """
     for p in (os.environ.get('DEFAULT_CHEAT_DIR', ''),
               os.path.join(sys.prefix, 'share', 'cheatsheets')):
-        if os.path.isdir(p):
+        if p and os.path.isdir(p):
             return [p, ]
     return list()
 
@@ -15,7 +17,7 @@ def default_path():
 def user_path():
     """ Get the location of the users cheat sheets. """
     for p in (os.path.join(os.path.expanduser('~'), '.cheat'), ):
-        if os.path.isdir(p):
+        if p and os.path.isdir(p):
             return [p, ]
     return list()
 
@@ -25,7 +27,7 @@ def cheat_paths():
     # merge the CHEATPATH paths into the sheet_paths
     paths = []
     for p in os.environ.get('CHEATPATH', '').split(os.pathsep):
-        if os.path.isdir(p):
+        if p and os.path.isdir(p):
             paths.append(p)
     return paths
 
@@ -77,8 +79,8 @@ def search(term):
     for cheatsheet in sorted(get().items()):
         match = ''
         for line in open(cheatsheet[1]):
-             if term in line:
-                  match += '  ' + line
+            if term in line:
+                match += '  ' + line
 
         if not match == '':
             result += cheatsheet[0] + ":\n" + match + "\n"

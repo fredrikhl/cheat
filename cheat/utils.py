@@ -1,7 +1,8 @@
+# encoding: utf-8
+""" Stuff that doesn't fit in anywhere particular. """
 from __future__ import print_function
 import os
 import sys
-import re
 
 default_lexer_name = 'markdown'
 
@@ -64,7 +65,7 @@ def colorize(sheet_content, filename=''):
 
 def die(message):
     """ Prints a message to stderr and then terminates """
-    warn(message)
+    stderr_warn(message)
     exit(1)
 
 
@@ -100,6 +101,6 @@ def prompt_yes_or_no(question):
     return get_input('[y/n] ') == 'y'
 
 
-def warn(message):
+def stderr_warn(message):
     """ Prints a message to stderr """
     print((message), file=sys.stderr)

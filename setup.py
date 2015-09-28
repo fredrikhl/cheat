@@ -14,7 +14,6 @@ setup(
     url='https://github.com/chrisallenlane/cheat',
     packages=[
         'cheat',
-        'cheat.test',
     ],
     data_files=[
         ('etc/cheat/autocomplete', ['autocomplete/cheat.bash',
