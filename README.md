@@ -1,5 +1,5 @@
-cheat
-=====
+# cheat
+
 `cheat` allows you to create and view interactive cheatsheets on the
 command-line. It was designed to help remind \*nix system administrators of
 options for commands that they use frequently, but not frequently enough to
@@ -7,8 +7,9 @@ remember.
 
 `cheat` depends only on `python` and `pip`.
 
-Original
---------
+
+## Original
+
 This version is a fork from
 [chrisallenlane/cheat](https://github.com/chrisallenlane/cheat).
 
@@ -19,13 +20,13 @@ The last version from [chrisallenlane](https://github.com/chrisallenlane/) can
 be fetched from PyPI:
 [![Latest Version](https://pypip.in/version/cheat/badge.png)](https://pypi.python.org/pypi/cheat/)
 
-Installing
-----------
+
+## Installing
 
     pip install git+https://github.com/fredrikhl/cheat.git#egg=cheat
 
-Usage
------
+
+## Usage
 
     usage: cheat [-h] [-l] [-d] [-v] [-e CHEATSHEET | -s KEYWORD | CHEATSHEET]
 
@@ -42,12 +43,13 @@ Usage
       -s KEYWORD, --search KEYWORD
                             Search cheat sheets for KEYWORD.
 
-Configure
----------
+
+## Configure
+
 The following environment variables affect how `cheat` works:
 
-CHEATCOLORS
-~~~~~~~~~~~
+### CHEATCOLORS
+
 Setting the `CHEATCOLORS` environment variable enables syntax highlighting of cheat sheets.
 
 If a cheat sheet has a file extension, that extension will be used to select
@@ -66,9 +68,8 @@ Example:
     # assume 'markdown')
     export CHEATCOLORS=1
 
+### DEFAULT\_CHEAT\_DIR
 
-DEFAULT\_CHEAT\_DIR
-~~~~~~~~~~~~~~~~~~~
 Override the default location for installed cheat sheets.
 
 If this environment variable is set to a non-existing location, the default
@@ -84,8 +85,8 @@ Example:
     # Change location fo default cheat sheets
     export DEFAULT_CHEAT_DIR="/path/to/my/cheatsheets"
 
-CHEATPATH
-~~~~~~~~~
+### CHEATPATH
+
 Extra locations for cheat sheets.
 
 Multiple colon-separated paths can be given.
@@ -102,8 +103,8 @@ Example:
     # both directories have a cheat sheet for `foo`, the version found in
     # /my/second/set is used by cheat.
 
-EDITOR
-~~~~~~
+### EDITOR
+
 `cheat` depends on an editor being set in your shell when editing cheat sheets.
 
 Example:
@@ -111,8 +112,8 @@ Example:
     export EDITOR=vim
 
 
-Editing cheat sheets
---------------------
+## Editing cheat sheets
+
 If the cheat sheet that is being edited exists only in the default cheat dir,
 or if you don't have write access to the cheat sheet, a copy will be made in
 the first writeable search path for `cheat`.
