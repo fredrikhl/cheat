@@ -1,9 +1,20 @@
 from distutils.core import setup
 import os
 
+
+def get_version_number():
+    u""" Get the version number from the cheat package. """
+    local = dict()
+    initfile = os.path.join(os.path.dirname(__file__), 'cheat', '__init__.py')
+    execfile(initfile, local)
+    if 'version' in local:
+        return '%d.%d.%d' % local['version']
+    raise Exception("No version in %r" % initfile)
+
+
 setup(
     name='cheat',
-    version='2.1.15',
+    version=get_version_number(),
     author='Chris Lane',
     author_email='chris@chris-allen-lane.com',
     license='GPL3',
@@ -24,7 +35,6 @@ setup(
     ],
     scripts=['bin/cheat'],
     install_requires=[
-        'docopt >= 0.6.1',
         'pygments >= 1.6.0',
         'pygments-markdown-lexer == 0.1.0.dev39', ]
 )

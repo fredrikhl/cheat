@@ -27,6 +27,8 @@ def _get_highlighter(filename, lexer_name):
     # highlighting:
     no_highlight = lambda text: text
 
+    lexer = None
+
     # Import the highlight tools
     try:
         from pygments import highlight
@@ -69,22 +71,22 @@ def die(message):
     exit(1)
 
 
-def editor():
-    """ Determines the user's preferred editor """
-    if 'EDITOR' not in os.environ:
-        die(
-            'In order to create/edit a cheatsheet you must set your EDITOR '
-            'environment variable to your editor\'s path.'
-        )
+def edit(filename):
+    u""" Launch editor with file. """
+    import subprocess
 
-    elif os.environ['EDITOR'] == "":
-        die(
-          'Your EDITOR environment variable is set to an empty string. It must '
-          'be set to your editor\'s path.'
-        )
+    editor = os.environ.get('EDITOR')
+    if not editor:
+        raise Exception(
+            u"Could not edit %r: No EDITOR environment variable set" %
+            filename)
 
-    else:
-        return os.environ['EDITOR']
+    try:
+        subprocess.call([editor, filename])
+    except OSError, e:
+        raise Exception(
+            u"Could not edit %r (editor: %r): %s" %
+            (filename, editor, e))
 
 
 def prompt_yes_or_no(question):

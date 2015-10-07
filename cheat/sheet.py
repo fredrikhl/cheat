@@ -1,89 +1,98 @@
 # encoding: utf-8
 """ Module for creating, editing and reading cheat sheets. """
-from cheat import sheets
-from cheat.utils import die, editor
+from cheat.sheets import Sheets
 import os
 import shutil
-import subprocess
 
 
-def copy(current_sheet_path, new_sheet_path):
-    """ Copies a sheet to a new path """
+class CheatSheet(object):
+    u""" Cheat sheet abstraction. """
 
-    # attempt to copy the sheet to DEFAULT_CHEAT_DIR
+    def __init__(self, sheet_name):
+        u""" Sheet object. """
+        self._name = sheet_name
+
+    @property
+    def name(self):
+        u""" The cheat sheet name. """
+        return self._name
+
+    @property
+    def filename(self):
+        u""" The filename of this cheat sheet. """
+        if not getattr(self, '_filename', None):
+            self._filename = Sheets.cheat_sheets.get(self.name)
+        return self._filename
+
+    @filename.setter
+    def filename(self, new_filename):
+        u""" Sets the filename for this cheat sheet.
+
+        We need to update the filename of a cheat sheet when we create a new
+        sheet or make a writable copy of a sheet.
+
+        """
+        self._filename = new_filename
+
+    @property
+    def exists(self):
+        u""" Checks if this cheat sheet exists. """
+        return Sheets.exists(self.name)
+
+    @property
+    def writable(self):
+        u""" Checks if the file for this cheat sheet is writable. """
+        return Sheets.is_writable(self.name)
+
+    @property
+    def contents(self):
+        u""" The contents of this cheat sheet. """
+        if not self.exists:
+            return None
+        with open(self.filename, 'r') as cheatfile:
+            return cheatfile.read()
+
+    def create(self, ext='md'):
+        u""" Creates a file for this cheat sheet. """
+        if self.exists:
+            raise Exception("Sheet already exists")
+        if Sheets.write_dir is None:
+            raise Exception("No writable path configured")
+        if ext:
+            new_sheet = os.path.extsep.join((self.name, ext))
+        else:
+            new_sheet = self.name
+        self.filename = os.path.join(Sheets.write_dir, new_sheet)
+        touch(self.filename)
+
+    def copy(self):
+        u""" Creates a copy of this cheat sheet. """
+        if not self.exists:
+            raise Exception("Sheet doesn't exist")
+        if Sheets.write_dir is None:
+            raise Exception("No writable path configured")
+        new_sheet = os.path.join(Sheets.write_dir,
+                                 os.path.basename(self.filename))
+        shutil.copy(self.filename, new_sheet)
+        self.filename = new_sheet
+
+
+def touch(filename):
+    u""" Touch a file. """
+    with open(filename, 'a'):
+        os.utime(filename, None)
+
+
+def get_editable(name):
+    u""" Get the filename of an editable cheat sheet. """
+    sheet = CheatSheet(name)
     try:
-        shutil.copy(current_sheet_path, new_sheet_path)
-
-    # fail gracefully if the cheatsheet cannot be copied. This can happen if
-    # DEFAULT_CHEAT_DIR does not exist
-    except IOError:
-        die('Could not copy cheatsheet for editing.')
-
-
-def create_or_edit(sheet):
-    """ Creates or edits a cheatsheet """
-
-    # if the cheatsheet does not exist
-    if not exists(sheet):
-        create(sheet)
-
-    # if the cheatsheet exists but not in the default_path, copy it to the
-    # default path before editing
-    elif exists(sheet) and not exists_in_default_path(sheet):
-        copy(path(sheet), os.path.join(sheets.default_path(), sheet))
-        edit(sheet)
-
-    # if it exists and is in the default path, then just open it
-    else:
-        edit(sheet)
-
-
-def create(sheet):
-    """ Creates a cheatsheet """
-    new_sheet_path = os.path.join(sheets.default_path(), sheet)
-
-    try:
-        subprocess.call([editor(), new_sheet_path])
-
-    except OSError:
-        die('Could not launch ' + editor())
-
-
-def edit(sheet):
-    """ Opens a cheatsheet for editing """
-
-    try:
-        subprocess.call([editor(), path(sheet)])
-
-    except OSError:
-        die('Could not launch ' + editor())
-
-
-def exists(sheet):
-    """ Predicate that returns true if the sheet exists """
-    return sheet in sheets.get() and os.access(path(sheet), os.R_OK)
-
-
-def exists_in_default_path(sheet):
-    """ Predicate that returns true if the sheet exists in default_path"""
-    default_path_sheet = os.path.join(sheets.default_path(), sheet)
-    return sheet in sheets.get() and os.access(default_path_sheet, os.R_OK)
-
-
-def is_writable(sheet):
-    """ Predicate that returns true if the sheet is writeable """
-    return sheet in sheets.get() and os.access(path(sheet), os.W_OK)
-
-
-def path(sheet):
-    """ Returns a sheet's filesystem path """
-    return sheets.get()[sheet]
-
-
-def read(sheet):
-    """ Returns the contents of the cheatsheet as a String """
-    if not exists(sheet):
-        die('No cheatsheet found for ' + sheet)
-
-    with open (path(sheet)) as cheatfile:
-          return cheatfile.read()
+        if not sheet.exists:
+            sheet.create()
+        elif not sheet.writable:
+            sheet.copy()
+    except Exception, e:
+        raise Exception(
+            u"Could not edit %r (file: %r): %s" %
+            (sheet.name, sheet.filename, e))
+    return sheet.filename

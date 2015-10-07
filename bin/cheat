@@ -1,19 +1,12 @@
 #!/venv/simple/bin/python
+# encoding: utf-8
 
-"""cheat
+"""Show or edit cheat sheets.
 
-Usage:
-  cheat <cheatsheet>
-  cheat -e <cheatsheet>
-  cheat -s <keyword>
-  cheat -l
-  cheat -d
-  cheat -v
-
-cheat allows you to create and view interactive cheatsheets on the
-command-line. It was designed to help remind *nix system
-administrators of options for commands that they use frequently,
-but not frequently enough to remember.
+Cheat allows you to create and view interactive cheatsheets on the
+command-line. It was designed to help remind *nix system administrators of
+options for commands that they use frequently, but not frequently enough to
+remember.
 
 Examples:
   To look up 'tar':
@@ -21,42 +14,127 @@ Examples:
 
   To create or edit the cheatsheet for 'foo':
   cheat -e foo
-
-Options:
-  -d --directories  List directories on CHEATPATH
-  -e --edit         Edit cheatsheet
-  -l --list         List cheatsheets
-  -s --search       Search cheatsheets for <keyword>
-  -v --version      Print the version number
 """
 
-# require the dependencies
-from cheat import sheet, sheets
-from docopt import docopt
-from cheat.utils import colorize
+import cheat
+from cheat.sheets import Sheets
+from cheat.utils import colorize, edit
+from cheat.sheet import CheatSheet, get_editable
+
+import argparse
+
+
+def print_version():
+    u""" Print cheat version and return. """
+    print('Cheat version %d.%d.%d' % cheat.version)
+    return 0
+
+
+def print_sheets():
+    u""" Print list of sheets and return. """
+    ordered_sheets = []
+    pad_length = max((len(x) for x in Sheets.cheat_sheets))
+    for name in Sheets.cheat_sheets:
+        ordered_sheets.append(
+            name.ljust(pad_length) + Sheets.cheat_sheets[name])
+    print("\n".join(sorted(ordered_sheets)))
+    return 0
+
+
+def print_paths():
+    u""" Print list of cheat sheets search paths and return. """
+    paths = "\n".join(Sheets.sheet_paths)
+    if not paths:
+        return "No paths configured"
+    print(paths)
+    return 0
+
+
+def print_search(term):
+    u""" Print search results and return. """
+    results = []
+
+    for name, lines in Sheets.search(term):
+        results.append("%s: \n\t%s" % (name, "\n\t".join(lines)))
+
+    if not results:
+        return "No matches for %r\n" % term
+
+    print("\n".join(results))
+    return 0
+
+
+def edit_sheet(name):
+    u""" Edit cheat sheet. """
+    try:
+        filename = get_editable(name)
+        edit(filename)
+    except Exception, e:
+        return str(e)
+    return 0
+
+
+def show_sheet(name):
+    sheet = CheatSheet(name)
+    print(colorize(sheet.contents, sheet.filename))
+    return 0
+
+
+def main(args=None):
+    u""" Script entry point. """
+
+    # TODO: Not happy with the exclusive group – all options are mutually
+    #       exclusive! We could add all options to a mutually exclusive group,
+    #       but that looks really odd in the help output.
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-l', '--list',
+                        dest='do_list',
+                        default=False,
+                        action='store_true',
+                        help='List existing cheat sheets and exit.')
+    parser.add_argument('-d', '--directories',
+                        dest='do_dirs',
+                        default=False,
+                        action='store_true',
+                        help='List cheat sheet directories and exit.')
+    parser.add_argument('-v', '--version',
+                        dest='do_version',
+                        default=False,
+                        action='store_true',
+                        help='Print version and exit.')
+
+    actions = parser.add_mutually_exclusive_group(required=False)
+    actions.add_argument('-e', '--edit',
+                         metavar='CHEATSHEET',
+                         help='Edit a cheat sheet %(metavar)s.')
+    actions.add_argument('-s', '--search',
+                         metavar='KEYWORD',
+                         help='Search cheat sheets for %(metavar)s.')
+    actions.add_argument('sheet',
+                         default=None,
+                         metavar='CHEATSHEET',
+                         nargs='?',
+                         help='Show the cheat sheet named %(metavar)r.')
+    args = parser.parse_args(args)
+
+    if args.do_version:
+        return print_version()
+
+    if args.do_list:
+        return print_sheets()
+
+    if args.do_dirs:
+        return print_paths()
+
+    if args.search:
+        return print_search(args.search)
+
+    if args.edit:
+        return edit_sheet(args.edit)
+
+    if args.sheet:
+        return show_sheet(args.sheet)
 
 
 if __name__ == '__main__':
-    # parse the command-line options
-    options = docopt(__doc__, version='cheat 2.1.15')
-
-    # list directories
-    if options['--directories']:
-        print("\n".join(sheets.paths()))
-
-    # list cheatsheets
-    elif options['--list']:
-        print(sheets.list())
-
-    # create/edit cheatsheet
-    elif options['--edit']:
-        sheet.create_or_edit(options['<cheatsheet>'])
-
-    # search among the cheatsheets
-    elif options['--search']:
-        print(colorize(sheets.search(options['<keyword>'])))
-
-    # print the cheatsheet
-    else:
-        print(colorize(sheet.read(options['<cheatsheet>']),
-                       options['<cheatsheet>']))
+    raise SystemExit(main())
