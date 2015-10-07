@@ -65,12 +65,6 @@ def colorize(sheet_content, filename=''):
     return highlight(sheet_content)
 
 
-def die(message):
-    """ Prints a message to stderr and then terminates """
-    stderr_warn(message)
-    exit(1)
-
-
 def edit(filename):
     u""" Launch editor with file. """
     import subprocess
@@ -87,22 +81,3 @@ def edit(filename):
         raise Exception(
             u"Could not edit %r (editor: %r): %s" %
             (filename, editor, e))
-
-
-def prompt_yes_or_no(question):
-    """ Prompts the user with a yes-or-no question """
-    # Support Python 2 and 3 input
-    # Default to Python 2's input()
-    get_input = raw_input
-
-    # If this is Python 3, use input()
-    if sys.version_info[:2] >= (3, 0):
-        get_input = input
-
-    print(question)
-    return get_input('[y/n] ') == 'y'
-
-
-def stderr_warn(message):
-    """ Prints a message to stderr """
-    print((message), file=sys.stderr)

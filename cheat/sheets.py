@@ -4,12 +4,42 @@ import os
 import sys
 
 
+def is_readable_dir(path):
+    u""" Return True if directory is readable. """
+    return (bool(path) and os.path.isdir(path)
+            and os.access(path, os.R_OK | os.X_OK))
+
+
 class _SheetLookup(object):
 
     u""" Class to deal with cheat sheet paths. """
 
     install_dir = os.path.join(sys.prefix, 'share', 'cheatsheets')
     u""" Where cheat sheets gets installed to. """
+
+    source_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                              'cheatsheets')
+    u""" Location of cheat sheets in source dir. """
+
+    @property
+    def default_cheat_sheets(self):
+        u""" The default cheat sheets.
+
+        Return the first existing, readable folder of:
+
+          1. env[DEFAULT_CHEAT_DIR]
+          2. install_dir
+          3. source_dir
+
+        :return str,None: Default cheatsheets path, if any.
+
+        """
+        for path in (os.environ.get('DEFAULT_CHEAT_DIR'),
+                     self.install_dir,
+                     self.source_dir):
+            if is_readable_dir(path):
+                return path
+        return None
 
     @property
     def write_dir(self):
@@ -20,7 +50,7 @@ class _SheetLookup(object):
             path is found.
         """
         for p in reversed(self.sheet_paths):
-            if p == self.install_dir:
+            if p in (self.install_dir, self.source_dir):
                 continue
             if os.access(p, os.W_OK):
                 return p
@@ -48,8 +78,7 @@ class _SheetLookup(object):
         considered when looking for cheat sheets. It contains the following
         directories, if they exist and are readable:
 
-          1. <install prefix>/share/cheatsheets/
-          2. env[DEFAULT_CHEAT_DIR]
+          1. default_cheat_sheets
           3. ~/.cheat/
           4. env[CHEATPATH] (colon-separated list)
 
@@ -57,15 +86,13 @@ class _SheetLookup(object):
             A list of readable paths that may contain cheat sheets.
 
         """
-        if not hasattr(self, '__cheat_paths'):
-            self.__cheat_paths = filter(
-                lambda p: (p and os.path.isdir(p)
-                           and os.access(p, os.R_OK | os.X_OK)),
-                [self.install_dir,
-                 os.environ.get('DEFAULT_CHEAT_DIR', None),
+        if not hasattr(self, '_cheat_paths'):
+            self._cheat_paths = filter(
+                is_readable_dir,
+                [self.default_cheat_sheets,
                  os.path.join(os.path.expanduser('~'), '.cheat'),
                  ] + os.environ.get('CHEATPATH', '').split(os.pathsep))
-        return self.__cheat_paths
+        return self._cheat_paths
 
     def exists(self, name):
         u""" Check if the cheat sheet exists. """
@@ -112,4 +139,6 @@ class _SheetLookup(object):
                 yield name, matches
 
 
+# TODO: Should probably replace sys.modules[name] with this:
+#     sys.modules[__name__] = _SheetLookup()
 Sheets = _SheetLookup()

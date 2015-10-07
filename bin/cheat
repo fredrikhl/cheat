@@ -76,6 +76,8 @@ def edit_sheet(name):
 
 def show_sheet(name):
     sheet = CheatSheet(name)
+    if not sheet.exists:
+        return "No cheat sheet %r in search paths" % sheet.name
     print(colorize(sheet.contents, sheet.filename))
     return 0
 
