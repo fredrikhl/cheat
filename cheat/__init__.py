@@ -1,3 +1,3 @@
 # encoding: utf-8
 """ The cheatsheet package. """
-version = (2, 2, 0)
+version = (2, 2, 1)
