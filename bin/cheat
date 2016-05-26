@@ -14,7 +14,6 @@ Examples:
   To create or edit the cheatsheet for 'foo':
   cheat -e foo
 """
-
 import cheat
 from cheat.sheets import Sheets
 from cheat.utils import colorize, edit
@@ -29,7 +28,7 @@ VERSION = '.'.join(str(x) for x in cheat.version)
 def print_sheets():
     u""" Print list of sheets and return. """
     ordered_sheets = []
-    pad_length = max((len(x) for x in Sheets.cheat_sheets))
+    pad_length = max((len(x) for x in Sheets.cheat_sheets)) + 1
     for name in Sheets.cheat_sheets:
         ordered_sheets.append(
             name.ljust(pad_length) + Sheets.cheat_sheets[name])
