@@ -1,9 +1,13 @@
+#!/usr/bin/env python
+# encoding: utf-8
+""" install cheat. """
+
 from distutils.core import setup
 import os
 
 
 def get_version_number():
-    u""" Get the version number from the cheat package. """
+    """ Get the version number from the cheat package. """
     local = dict()
     initfile = os.path.join(os.path.dirname(__file__), 'cheat', '__init__.py')
     execfile(initfile, local)

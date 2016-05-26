@@ -14,6 +14,8 @@ Examples:
   To create or edit the cheatsheet for 'foo':
   cheat -e foo
 """
+from __future__ import print_function, unicode_literals
+
 import cheat
 from cheat.sheets import Sheets
 from cheat.utils import colorize, edit
@@ -26,7 +28,7 @@ VERSION = '.'.join(str(x) for x in cheat.version)
 
 
 def print_sheets():
-    u""" Print list of sheets and return. """
+    """ Print list of sheets and return. """
     ordered_sheets = []
     pad_length = max((len(x) for x in Sheets.cheat_sheets)) + 1
     for name in Sheets.cheat_sheets:
@@ -37,7 +39,7 @@ def print_sheets():
 
 
 def print_paths():
-    u""" Print list of cheat sheets search paths and return. """
+    """ Print list of cheat sheets search paths and return. """
     paths = "\n".join(Sheets.sheet_paths)
     if not paths:
         return "No paths configured"
@@ -46,7 +48,7 @@ def print_paths():
 
 
 def print_search(term):
-    u""" Print search results and return. """
+    """ Print search results and return. """
     results = []
 
     for name, lines in Sheets.search(term):
@@ -60,7 +62,7 @@ def print_search(term):
 
 
 def edit_sheet(name):
-    u""" Edit cheat sheet. """
+    """ Edit cheat sheet. """
     try:
         filename = get_editable(name)
         edit(filename)
@@ -97,7 +99,9 @@ def CallAndExitAction(callback):
 
 
 class SearchAction(argparse.Action):
-    def __init__(self, option_strings, dest, metavar='KEYWORD', help=help):
+    """ Argparse action that searches for cheat sheets. """
+
+    def __init__(self, option_strings, dest, metavar='KEYWORD', help=None):
         super(SearchAction, self).__init__(
             option_strings=option_strings,
             dest=argparse.SUPPRESS,
@@ -112,7 +116,7 @@ class SearchAction(argparse.Action):
 
 
 def main(args=None):
-    u""" Script entry point. """
+    """ Script entry point. """
 
     parser = argparse.ArgumentParser()
 
