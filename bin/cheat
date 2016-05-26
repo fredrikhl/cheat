@@ -1,7 +1,6 @@
 #!/venv/simple/bin/python
 # encoding: utf-8
-
-"""Show or edit cheat sheets.
+""" Show or edit cheat sheets.
 
 Cheat allows you to create and view interactive cheatsheets on the
 command-line. It was designed to help remind *nix system administrators of
@@ -24,10 +23,7 @@ from cheat.sheet import CheatSheet, get_editable
 import argparse
 
 
-def print_version():
-    u""" Print cheat version and return. """
-    print('Cheat version %d.%d.%d' % cheat.version)
-    return 0
+VERSION = '.'.join(str(x) for x in cheat.version)
 
 
 def print_sheets():
@@ -82,60 +78,84 @@ def show_sheet(name):
     return 0
 
 
+def CallAndExitAction(callback):
+    """ Returns a callback class. """
+    class _action(argparse.Action):
+        """ An action that calls 'callback' and exits.  """
+
+        def __init__(self, option_strings, dest, help=None):
+            super(_action, self).__init__(
+                option_strings=option_strings,
+                dest=argparse.SUPPRESS,
+                default=argparse.SUPPRESS,
+                nargs=0,
+                help=help)
+
+        def __call__(self, parser, ns, opt_value, option_string=None):
+            callback()
+            parser.exit()
+    return _action
+
+
+class SearchAction(argparse.Action):
+    def __init__(self, option_strings, dest, metavar='KEYWORD', help=help):
+        super(SearchAction, self).__init__(
+            option_strings=option_strings,
+            dest=argparse.SUPPRESS,
+            default=argparse.SUPPRESS,
+            nargs='*',
+            metavar=metavar,
+            help=help)
+
+    def __call__(self, parser, ns, opt_value, option_string=None):
+        print_search(' '.join(opt_value))
+        parser.exit()
+
+
 def main(args=None):
     u""" Script entry point. """
 
-    # TODO: Not happy with the exclusive group – all options are mutually
-    #       exclusive! We could add all options to a mutually exclusive group,
-    #       but that looks really odd in the help output.
     parser = argparse.ArgumentParser()
-    parser.add_argument('-l', '--list',
-                        dest='do_list',
-                        default=False,
-                        action='store_true',
-                        help='List existing cheat sheets and exit.')
-    parser.add_argument('-d', '--directories',
-                        dest='do_dirs',
-                        default=False,
-                        action='store_true',
-                        help='List cheat sheet directories and exit.')
-    parser.add_argument('-v', '--version',
-                        dest='do_version',
-                        default=False,
-                        action='store_true',
-                        help='Print version and exit.')
 
-    actions = parser.add_mutually_exclusive_group(required=False)
-    actions.add_argument('-e', '--edit',
-                         metavar='CHEATSHEET',
-                         help='Edit a cheat sheet %(metavar)s.')
-    actions.add_argument('-s', '--search',
-                         metavar='KEYWORD',
-                         help='Search cheat sheets for %(metavar)s.')
-    actions.add_argument('sheet',
-                         default=None,
-                         metavar='CHEATSHEET',
-                         nargs='?',
-                         help='Show the cheat sheet named %(metavar)r.')
+    parser.add_argument(
+        '-l', '--list',
+        action=CallAndExitAction(print_sheets),
+        help='List existing cheat sheets and exit.')
+
+    parser.add_argument(
+        '-d', '--directories',
+        action=CallAndExitAction(print_paths),
+        help='List cheat sheet directories and exit.')
+
+    parser.add_argument(
+        '-v', '--version',
+        action='version',
+        version='%(prog)s version {:s}'.format(VERSION),
+        help="show program's version number and exit")
+
+    parser.add_argument(
+        '-s', '--search',
+        metavar='KEYWORD',
+        action=SearchAction,
+        help='Search cheat sheets for %(metavar)s.')
+
+    parser.add_argument(
+        '-e', '--edit',
+        action='store_true',
+        default=False,
+        help='Edit the cheat sheet')
+
+    parser.add_argument(
+        'sheet',
+        default=None,
+        metavar='CHEATSHEET',
+        help='Show the cheat sheet named %(metavar)r.')
     args = parser.parse_args(args)
 
-    if args.do_version:
-        return print_version()
-
-    if args.do_list:
-        return print_sheets()
-
-    if args.do_dirs:
-        return print_paths()
-
-    if args.search:
-        return print_search(args.search)
-
     if args.edit:
-        return edit_sheet(args.edit)
+        return edit_sheet(args.sheet)
 
-    if args.sheet:
-        return show_sheet(args.sheet)
+    return show_sheet(args.sheet)
 
 
 if __name__ == '__main__':
