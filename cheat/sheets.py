@@ -1,29 +1,32 @@
 # encoding: utf-8
 """ Module for looking up and fetching cheat sheets. """
+
+from __future__ import unicode_literals, print_function
+
 import os
 import sys
 
 
 def is_readable_dir(path):
-    u""" Return True if directory is readable. """
+    """ Return True if directory is readable. """
     return (bool(path) and os.path.isdir(path)
             and os.access(path, os.R_OK | os.X_OK))
 
 
 class _SheetLookup(object):
 
-    u""" Class to deal with cheat sheet paths. """
+    """ Class to deal with cheat sheet paths. """
 
     install_dir = os.path.join(sys.prefix, 'share', 'cheatsheets')
-    u""" Where cheat sheets gets installed to. """
+    """ Where cheat sheets gets installed to. """
 
     source_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)),
                               'cheatsheets')
-    u""" Location of cheat sheets in source dir. """
+    """ Location of cheat sheets in source dir. """
 
     @property
     def default_cheat_sheets(self):
-        u""" The default cheat sheets.
+        """ The default cheat sheets.
 
         Return the first existing, readable folder of:
 
@@ -58,7 +61,7 @@ class _SheetLookup(object):
 
     @property
     def cheat_sheets(self):
-        u""" A mapping of cheat sheet names to filename. """
+        """ A mapping of cheat sheet names to filename. """
         if not hasattr(self, '_cheat_sheets'):
             self._cheat_sheets = dict()
 
@@ -72,7 +75,7 @@ class _SheetLookup(object):
 
     @property
     def sheet_paths(self):
-        u""" A list of search paths that exists and are readable.
+        """ A list of search paths that exists and are readable.
 
         The list is ordered so that the last item is the first that should be
         considered when looking for cheat sheets. It contains the following
@@ -95,7 +98,7 @@ class _SheetLookup(object):
         return self._cheat_paths
 
     def exists(self, name):
-        u""" Check if the cheat sheet exists. """
+        """ Check if the cheat sheet exists. """
         filename = self.get(name)
         if filename is None:
             return False
@@ -110,7 +113,7 @@ class _SheetLookup(object):
         return os.access(filename, os.W_OK)
 
     def get(self, name):
-        u""" Return the path of the named cheat sheet.
+        """ Return the path of the named cheat sheet.
 
         :param str name: The name of a cheat sheet.
 
@@ -121,7 +124,7 @@ class _SheetLookup(object):
         return self.cheat_sheets.get(name, None)
 
     def search(self, term):
-        u""" Search all cheatsheets for a term.
+        """ Search all cheatsheets for a term.
 
         :param str term: The term to search for.
 
@@ -133,6 +136,7 @@ class _SheetLookup(object):
         for name in sorted(self.cheat_sheets.keys()):
             matches = []
             for line in open(self.cheat_sheets[name], 'r'):
+                line = line.decode('utf-8', 'replace')
                 if term in line:
                     matches.append(line.strip())
             if matches:

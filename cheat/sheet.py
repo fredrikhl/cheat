@@ -1,32 +1,34 @@
 # encoding: utf-8
 """ Module for creating, editing and reading cheat sheets. """
+from __future__ import unicode_literals
+
 from cheat.sheets import Sheets
 import os
 import shutil
 
 
 class CheatSheet(object):
-    u""" Cheat sheet abstraction. """
+    """ Cheat sheet abstraction. """
 
     def __init__(self, sheet_name):
-        u""" Sheet object. """
+        """ Sheet object. """
         self._name = sheet_name
 
     @property
     def name(self):
-        u""" The cheat sheet name. """
+        """ The cheat sheet name. """
         return self._name
 
     @property
     def filename(self):
-        u""" The filename of this cheat sheet. """
+        """ The filename of this cheat sheet. """
         if not getattr(self, '_filename', None):
             self._filename = Sheets.cheat_sheets.get(self.name)
         return self._filename
 
     @filename.setter
     def filename(self, new_filename):
-        u""" Sets the filename for this cheat sheet.
+        """ Sets the filename for this cheat sheet.
 
         We need to update the filename of a cheat sheet when we create a new
         sheet or make a writable copy of a sheet.
@@ -36,24 +38,24 @@ class CheatSheet(object):
 
     @property
     def exists(self):
-        u""" Checks if this cheat sheet exists. """
+        """ Checks if this cheat sheet exists. """
         return Sheets.exists(self.name)
 
     @property
     def writable(self):
-        u""" Checks if the file for this cheat sheet is writable. """
+        """ Checks if the file for this cheat sheet is writable. """
         return Sheets.is_writable(self.name)
 
     @property
     def contents(self):
-        u""" The contents of this cheat sheet. """
+        """ The contents of this cheat sheet. """
         if not self.exists:
             return None
         with open(self.filename, 'r') as cheatfile:
             return cheatfile.read()
 
     def create(self, ext='md'):
-        u""" Creates a file for this cheat sheet. """
+        """ Creates a file for this cheat sheet. """
         if self.exists:
             raise Exception("Sheet already exists")
         if Sheets.write_dir is None:
@@ -66,7 +68,7 @@ class CheatSheet(object):
         touch(self.filename)
 
     def copy(self):
-        u""" Creates a copy of this cheat sheet. """
+        """ Creates a copy of this cheat sheet. """
         if not self.exists:
             raise Exception("Sheet doesn't exist")
         if Sheets.write_dir is None:
@@ -78,13 +80,13 @@ class CheatSheet(object):
 
 
 def touch(filename):
-    u""" Touch a file. """
+    """ Touch a file. """
     with open(filename, 'a'):
         os.utime(filename, None)
 
 
 def get_editable(name):
-    u""" Get the filename of an editable cheat sheet. """
+    """ Get the filename of an editable cheat sheet. """
     sheet = CheatSheet(name)
     try:
         if not sheet.exists:
@@ -93,6 +95,6 @@ def get_editable(name):
             sheet.copy()
     except Exception, e:
         raise Exception(
-            u"Could not edit %r (file: %r): %s" %
+            "Could not edit %r (file: %r): %s" %
             (sheet.name, sheet.filename, e))
     return sheet.filename

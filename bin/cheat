@@ -111,7 +111,10 @@ class SearchAction(argparse.Action):
             help=help)
 
     def __call__(self, parser, ns, opt_value, option_string=None):
-        print_search(' '.join(opt_value))
+        # TODO: Auto-detect terminal encoding?
+        # TODO: Wilcard in join? Regex support?
+        print_search(
+            ' '.join([s.decode('utf-8', 'replace') for s in opt_value]))
         parser.exit()
 
 

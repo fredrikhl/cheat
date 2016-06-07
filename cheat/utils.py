@@ -1,6 +1,7 @@
 # encoding: utf-8
 """ Stuff that doesn't fit in anywhere particular. """
-from __future__ import print_function
+from __future__ import unicode_literals, print_function
+
 import os
 import sys
 
@@ -8,7 +9,7 @@ default_lexer_name = 'markdown'
 
 
 def _get_highlighter(filename, lexer_name):
-    u""" Get highlighter.
+    """ Get highlighter.
 
     Creates a highlighter for, if available. The highlighter will use the first
     available lexer from:
@@ -66,18 +67,18 @@ def colorize(sheet_content, filename=''):
 
 
 def edit(filename):
-    u""" Launch editor with file. """
+    """ Launch editor with file. """
     import subprocess
 
     editor = os.environ.get('EDITOR')
     if not editor:
         raise Exception(
-            u"Could not edit %r: No EDITOR environment variable set" %
+            "Could not edit %r: No EDITOR environment variable set" %
             filename)
 
     try:
         subprocess.call([editor, filename])
     except OSError, e:
         raise Exception(
-            u"Could not edit %r (editor: %r): %s" %
+            "Could not edit %r (editor: %r): %s" %
             (filename, editor, e))
