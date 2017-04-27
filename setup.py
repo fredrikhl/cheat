@@ -6,19 +6,18 @@ from distutils.core import setup
 import os
 
 
-def get_version_number():
-    """ Get the version number from the cheat package. """
-    local = dict()
-    initfile = os.path.join(os.path.dirname(__file__), 'cheat', '__init__.py')
-    execfile(initfile, local)
-    if 'version' in local:
-        return '%d.%d.%d' % local['version']
-    raise Exception("No version in %r" % initfile)
+def get_requirements(filename):
+    """ Read requirements from file. """
+    with open(filename, 'r') as reqfile:
+        for req_line in reqfile.readlines():
+            req_line = req_line.strip()
+            if req_line:
+                yield req_line
 
 
 setup(
     name='cheat',
-    version=get_version_number(),
+    # version=get_version_number(),
     author='Chris Lane',
     author_email='chris@chris-allen-lane.com',
     license='GPL3',
@@ -27,9 +26,8 @@ setup(
                  'system administrators of options for commands that they use '
                  'frequently, but not frequently enough to remember.'),
     url='https://github.com/chrisallenlane/cheat',
-    packages=[
-        'cheat',
-    ],
+    use_scm_version=True,
+    packages=['cheat', ],
     data_files=[
         ('etc/cheat/autocomplete', ['autocomplete/cheat.bash',
                                     'autocomplete/cheat.fish',
@@ -38,7 +36,6 @@ setup(
                                in os.listdir('cheatsheets')]),
     ],
     scripts=['bin/cheat'],
-    install_requires=[
-        'pygments >= 1.6.0',
-        'pygments-markdown-lexer == 0.1.0.dev39', ]
+    setup_requires=['setuptools_scm'],
+    install_requires=list(get_requirements('requirements.txt')),
 )
