@@ -1,4 +1,4 @@
-#!/venv/simple/bin/python
+#!/usr/bin/env python
 # encoding: utf-8
 """ Show or edit cheat sheets.
 
