@@ -3,12 +3,12 @@
 from __future__ import unicode_literals, print_function
 
 import os
-import sys
 
 default_lexer_name = 'markdown'
+default_style_name = 'default'
 
 
-def _get_highlighter(filename, lexer_name):
+def _get_highlighter(filename, lexer_name, style=None):
     """ Get highlighter.
 
     Creates a highlighter for, if available. The highlighter will use the first
@@ -26,15 +26,18 @@ def _get_highlighter(filename, lexer_name):
     """
     # A function that just returns the text unmodified, if we're unable to do
     # highlighting:
-    no_highlight = lambda text: text
-
-    lexer = None
+    def no_highlight(text):
+        return text
 
     # Import the highlight tools
     try:
         from pygments import highlight
-        from pygments.formatters import TerminalFormatter
+        from pygments.formatters import (TerminalFormatter,
+                                         Terminal256Formatter,
+                                         TerminalTrueColorFormatter)
+        from pygments.formatters.other import RawTokenFormatter
         from pygments.lexers import get_lexer_for_filename, get_lexer_by_name
+        from pygments.styles import get_style_by_name
     except ImportError:
         return no_highlight
 
@@ -52,17 +55,31 @@ def _get_highlighter(filename, lexer_name):
     if lexer is None:
         return no_highlight
 
-    return lambda text: highlight(text, lexer, TerminalFormatter())
+    formatter = TerminalFormatter()
+
+    if style:
+        try:
+            style = get_style_by_name(style)
+        except:
+            # Probably no such style
+            style = get_style_by_name(default_style_name)
+        formatter = TerminalTrueColorFormatter(style=style)
+
+#   return lambda text: (
+#       highlight(text, lexer, RawFormatter()) +
+#       highlight(text, lexer, formatter))
+    return lambda text: highlight(text, lexer, formatter)
 
 
 def colorize(sheet_content, filename=''):
     """ Colorizes cheatsheet content if so configured """
     do_colorize = os.environ.get('CHEATCOLORS', False)
+    style = os.environ.get('CHEATSTYLE', None)
 
     if not do_colorize:
         return sheet_content
 
-    highlight = _get_highlighter(filename, do_colorize)
+    highlight = _get_highlighter(filename, do_colorize, style=style)
     return highlight(sheet_content)
 
 
