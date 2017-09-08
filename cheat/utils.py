@@ -7,6 +7,10 @@ import os
 default_lexer_name = 'markdown'
 default_style_name = 'default'
 
+FILTERS = {
+    'markdown': ['md_heading', ],
+}
+
 
 def _get_highlighter(filename, lexer_name, style=None):
     """ Get highlighter.
@@ -38,6 +42,7 @@ def _get_highlighter(filename, lexer_name, style=None):
         from pygments.formatters.other import RawTokenFormatter
         from pygments.lexers import get_lexer_for_filename, get_lexer_by_name
         from pygments.styles import get_style_by_name
+        from pygments.filters import get_filter_by_name
     except ImportError:
         return no_highlight
 
@@ -50,7 +55,7 @@ def _get_highlighter(filename, lexer_name, style=None):
             break
         except:
             # probably pygments.util.ClassNotFound
-            continue
+            lexer = None
 
     if lexer is None:
         return no_highlight
@@ -63,10 +68,18 @@ def _get_highlighter(filename, lexer_name, style=None):
         except:
             # Probably no such style
             style = get_style_by_name(default_style_name)
-        formatter = TerminalTrueColorFormatter(style=style)
+        # formatter = TerminalTrueColorFormatter(style=style)
+        formatter = Terminal256Formatter(style=style)
+
+    filters = FILTERS.get(lexer.name, list())
+    for fn in filters:
+        try:
+            lexer.add_filter(get_filter_by_name(fn))
+        except:
+            pass
 
 #   return lambda text: (
-#       highlight(text, lexer, RawFormatter()) +
+#       highlight(text, lexer, RawTokenFormatter()) +
 #       highlight(text, lexer, formatter))
     return lambda text: highlight(text, lexer, formatter)
 
