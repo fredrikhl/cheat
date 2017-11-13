@@ -1,9 +1,8 @@
 # encoding: utf-8
 """ The cheatsheet package. """
+from pkg_resources import get_distribution, DistributionNotFound
 
-def get_version():
-    import pkg_resources as _pkg
-    return _pkg.get_distribution("cheat").parsed_version._version
-
-
-version = get_version()
+try:
+    __version__ = get_distribution('cheat').version
+except DistributionNotFound:
+    __version__ = None

@@ -24,17 +24,6 @@ from cheat.sheet import CheatSheet, get_editable
 import argparse
 
 
-def format_version(_v):
-    return ''.join((
-        '{:d}!'.format(_v.epoch) if _v.epoch > 0 else '',
-        '.'.join(map(str, _v.release)),
-        '-{}'.format(''.join(map(str, _v.dev))) if _v.dev else '',
-        '+{}'.format('.'.join(map(str, _v.local))) if _v.local else ''))
-
-
-VERSION = format_version(cheat.version)
-
-
 def print_sheets():
     """ Print list of sheets and return. """
     ordered_sheets = []
@@ -144,7 +133,7 @@ def main(args=None):
     parser.add_argument(
         '-v', '--version',
         action='version',
-        version='%(prog)s version {:s}'.format(VERSION),
+        version='%(prog)s version {:s}'.format(cheat.__version__),
         help="show program's version number and exit")
 
     parser.add_argument(
