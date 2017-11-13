@@ -82,8 +82,8 @@ class _SheetLookup(object):
         directories, if they exist and are readable:
 
           1. default_cheat_sheets
+          2. env[CHEATPATH] (colon-separated list)
           3. ~/.cheat/
-          4. env[CHEATPATH] (colon-separated list)
 
         :return list:
             A list of readable paths that may contain cheat sheets.
@@ -92,9 +92,10 @@ class _SheetLookup(object):
         if not hasattr(self, '_cheat_paths'):
             self._cheat_paths = filter(
                 is_readable_dir,
-                [self.default_cheat_sheets,
-                 os.path.join(os.path.expanduser('~'), '.cheat'),
-                 ] + os.environ.get('CHEATPATH', '').split(os.pathsep))
+                [self.default_cheat_sheets, ] +
+                os.environ.get('CHEATPATH', '').split(os.pathsep) +
+                [os.path.join(os.path.expanduser('~'), '.cheat'), ],
+            )
         return self._cheat_paths
 
     def exists(self, name):
