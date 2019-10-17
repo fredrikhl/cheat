@@ -20,13 +20,26 @@ except ImportError:
     COLORS = False
 
 
-default_lexer_name = 'markdown'
-default_style_name = 'default'
-
-
 def no_highlight(text):
     """ Return text unmodified. """
     return text
+
+
+def parse_bool_setting(value):
+    """ Parse a bool string value.
+
+    :type value: str
+    :rtype: bool
+    """
+    value = (value or '').strip().lower()
+    if not value:
+        return False
+    if value in ('f', 'n', 'false', 'no'):
+        return False
+    if value in ('t', 'y', 'true', 'yes'):
+        return True
+    # Some other non-false value?
+    return True
 
 
 def parse_filters_setting(filters_setting):
@@ -64,74 +77,89 @@ def parse_styles_setting(styles_setting):
             if not (style_name in seen or seen_add(style_name))]
 
 
-def _get_highlighter(filename, lexer_name=None, styles=None, filters=None):
-    """ Get highlighter.
+class Colorizer(object):
 
-    Creates a highlighter for, if available. The highlighter will use the first
-    available lexer from:
-      1. filename
-      2. lexer_name
-      3. default_lexer_name
+    default_lexer_name = 'markdown'
+    default_style_name = 'default'
 
-    :param string filename: A filename to fetch highlighter for.
-    :param string name: A fallback lexer name to use for highlighting.
-    :param list styles: A list of preferred styles, in order
-    :param dict filters: A mapping from lexer names to a list of filters
+    def __init__(self, enable, lexer_name=None, styles=None, filters=None):
+        self.enable = bool(enable)
+        self.lexer_name = lexer_name
+        self.styles = styles or ()
+        self.filters = filters or {}
 
-    :return callable:
-        A function that takes one parameter, the string to highlight.
+    @classmethod
+    def _get_highlighter(cls,
+                         filename,
+                         lexer_name=None,
+                         styles=None,
+                         filters=None):
+        """ Get highlighter.
 
-    """
-    # Import the highlight tools
-    if not COLORS:
-        return no_highlight
+        Creates a highlighter for, if available. The highlighter will use the
+        first available lexer from:
+          1. filename
+          2. lexer_name
+          3. default_lexer_name
 
-    # Find available lexer object
-    for method, value in ((get_lexer_for_filename, str(filename)),
-                          (get_lexer_by_name, str(lexer_name)),
-                          (get_lexer_by_name, default_lexer_name)):
-        try:
-            lexer = method(value)
-            break
-        except:
-            # probably pygments.util.ClassNotFound
-            lexer = None
+        :param string filename: A filename to fetch highlighter for.
+        :param string name: A fallback lexer name to use for highlighting.
+        :param list styles: A list of preferred styles, in order
+        :param dict filters: A mapping from lexer names to a list of filters
 
-    if lexer is None:
-        return no_highlight
+        :return callable:
+            A function that takes one parameter, the string to highlight.
 
-    formatter = TerminalFormatter()
+        """
+        # Import the highlight tools
+        if not COLORS:
+            return no_highlight
 
-    for style in (styles or []):
-        try:
-            formatter = Terminal256Formatter(style=get_style_by_name(style))
-            break
-        except:
-            continue
+        # Find available lexer object
+        for method, value in ((get_lexer_by_name, str(lexer_name)),
+                              (get_lexer_for_filename, str(filename)),
+                              (get_lexer_by_name, cls.default_lexer_name)):
+            try:
+                lexer = method(value)
+                break
+            except Exception:
+                # probably pygments.util.ClassNotFound
+                lexer = None
 
-    for filter_name in filters.get(lexer.name, list()):
-        try:
-            lexer.add_filter(get_filter_by_name(filter_name))
-        except:
-            pass
+        if lexer is None:
+            return no_highlight
 
-    return lambda text: highlight(text, lexer, formatter)
+        formatter = TerminalFormatter()
 
+        for style in (styles or ()):
+            try:
+                formatter = Terminal256Formatter(
+                    style=get_style_by_name(style))
+                break
+            except Exception:
+                continue
 
-def colorize(sheet_content, filename=''):
-    """ Colorizes cheatsheet content if so configured """
-    do_colorize = os.environ.get('CHEATCOLORS', False)
-    styles = os.environ.get('CHEATSTYLE', None)
-    filters = os.environ.get('CHEATFILTERS', None)
+        for filter_name in filters.get(lexer.name, list()):
+            try:
+                lexer.add_filter(get_filter_by_name(filter_name))
+            except Exception:
+                pass
 
-    if not do_colorize:
-        return sheet_content
+        return lambda text: highlight(text, lexer, formatter)
 
-    highlight = _get_highlighter(filename,
-                                 lexer_name=do_colorize,
-                                 styles=parse_styles_setting(styles),
-                                 filters=parse_filters_setting(filters))
-    return highlight(sheet_content)
+    def get_highlighter(self, filename):
+        return self._get_highlighter(
+            filename,
+            lexer_name=self.lexer_name,
+            styles=self.styles,
+            filters=self.filters)
+
+    def __call__(self, content, filename=''):
+        if not self.enable:
+            return content
+
+        highlight = self.get_highlighter(filename)
+        return highlight(content)
 
 
 def edit(filename):
@@ -146,7 +174,7 @@ def edit(filename):
 
     try:
         subprocess.call([editor, filename])
-    except OSError, e:
+    except OSError as e:
         raise Exception(
             "Could not edit %r (editor: %r): %s" %
             (filename, editor, e))

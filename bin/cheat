@@ -16,12 +16,19 @@ Examples:
 """
 from __future__ import print_function, unicode_literals
 
+import argparse
+import os
+
 import cheat
 from cheat.sheets import Sheets
-from cheat.utils import colorize, edit
+from cheat.utils import (
+    Colorizer,
+    edit,
+    parse_bool_setting,
+    parse_filters_setting,
+    parse_styles_setting,
+)
 from cheat.sheet import CheatSheet, get_editable
-
-import argparse
 
 
 def print_sheets():
@@ -63,12 +70,12 @@ def edit_sheet(name):
     try:
         filename = get_editable(name)
         edit(filename)
-    except Exception, e:
+    except Exception as e:
         return str(e)
     return 0
 
 
-def show_sheet(name):
+def show_sheet(name, colorize):
     sheet = CheatSheet(name)
     if not sheet.exists:
         return "No cheat sheet %r in search paths" % sheet.name
@@ -78,11 +85,11 @@ def show_sheet(name):
 
 def CallAndExitAction(callback):
     """ Returns a callback class. """
-    class _action(argparse.Action):
+    class _Action(argparse.Action):
         """ An action that calls 'callback' and exits.  """
 
         def __init__(self, option_strings, dest, help=None):
-            super(_action, self).__init__(
+            super(_Action, self).__init__(
                 option_strings=option_strings,
                 dest=argparse.SUPPRESS,
                 default=argparse.SUPPRESS,
@@ -92,7 +99,7 @@ def CallAndExitAction(callback):
         def __call__(self, parser, ns, opt_value, option_string=None):
             callback()
             parser.exit()
-    return _action
+    return _Action
 
 
 class SearchAction(argparse.Action):
@@ -118,7 +125,35 @@ class SearchAction(argparse.Action):
 def main(args=None):
     """ Script entry point. """
 
+    default_colorize = parse_bool_setting(os.environ.get('CHEATCOLORS', ''))
+    default_lexer = os.environ.get('CHEATLEXER') or None
+    default_styles = parse_styles_setting(os.environ.get('CHEATSTYLE', ''))
+    default_filters = parse_filters_setting(os.environ.get('CHEATFILTERS', ''))
+
     parser = argparse.ArgumentParser()
+
+    fmt_args = parser.add_argument_group('formatting')
+    colorize_mutex = fmt_args.add_mutually_exclusive_group()
+    colorize_mutex.add_argument(
+        '--colors',
+        dest='do_colorize',
+        action='store_true',
+        help='use colors' + (' (default)' if default_colorize else '')
+    )
+    colorize_mutex.add_argument(
+        '--no-colors',
+        dest='do_colorize',
+        action='store_false',
+        help='no not use colors' + ('' if default_colorize else ' (default)')
+    )
+    colorize_mutex.set_defaults(do_colorize=default_colorize)
+    fmt_args.add_argument(
+        '--lexer',
+        dest='lexer_name',
+        default=default_lexer,
+        help='Stylize cheat sheet using %(metavar)s (default: %(default)s)',
+        metavar='<lexer name>',
+    )
 
     parser.add_argument(
         '-l', '--list',
@@ -158,7 +193,14 @@ def main(args=None):
     if args.edit:
         return edit_sheet(args.sheet)
 
-    return show_sheet(args.sheet)
+    colorize = Colorizer(
+        enable=args.do_colorize,
+        lexer_name=args.lexer_name,
+        styles=default_styles,
+        filters=default_filters,
+    )
+
+    return show_sheet(args.sheet, colorize=colorize)
 
 
 if __name__ == '__main__':
