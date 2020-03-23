@@ -93,7 +93,7 @@ def get_editable(name):
             sheet.create()
         elif not sheet.writable:
             sheet.copy()
-    except Exception, e:
+    except Exception as e:
         raise Exception(
             "Could not edit %r (file: %r): %s" %
             (sheet.name, sheet.filename, e))
