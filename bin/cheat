@@ -83,7 +83,7 @@ def show_sheet(name, colorize):
     return 0
 
 
-def CallAndExitAction(callback):
+def CallAndExitAction(callback):  # noqa: N802
     """ Returns a callback class. """
     class _Action(argparse.Action):
         """ An action that calls 'callback' and exits.  """
@@ -117,8 +117,7 @@ class SearchAction(argparse.Action):
     def __call__(self, parser, ns, opt_value, option_string=None):
         # TODO: Auto-detect terminal encoding?
         # TODO: Wilcard in join? Regex support?
-        print_search(
-            ' '.join([s.decode('utf-8', 'replace') for s in opt_value]))
+        print_search(' '.join(opt_value))
         parser.exit()
 
 

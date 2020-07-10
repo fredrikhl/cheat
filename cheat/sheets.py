@@ -90,12 +90,12 @@ class _SheetLookup(object):
 
         """
         if not hasattr(self, '_cheat_paths'):
-            self._cheat_paths = filter(
+            self._cheat_paths = tuple(filter(
                 is_readable_dir,
                 [self.default_cheat_sheets, ] +
                 os.environ.get('CHEATPATH', '').split(os.pathsep) +
                 [os.path.join(os.path.expanduser('~'), '.cheat'), ],
-            )
+            ))
         return self._cheat_paths
 
     def exists(self, name):
@@ -137,7 +137,6 @@ class _SheetLookup(object):
         for name in sorted(self.cheat_sheets.keys()):
             matches = []
             for line in open(self.cheat_sheets[name], 'r'):
-                line = line.decode('utf-8', 'replace')
                 if term in line:
                     matches.append(line.strip())
             if matches:
